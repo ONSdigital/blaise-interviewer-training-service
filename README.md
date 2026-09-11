@@ -1,4 +1,4 @@
-# Blaise Interviewer Training Service
+# Blaise Interviewer Training Service 🏋️‍♂️
 
 Blaise Interviewer Training Service provides a web UI for interviewer training in a Blaise environment.
 
