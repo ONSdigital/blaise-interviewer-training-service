@@ -1,17 +1,6 @@
-import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      "blaise-api-node-client": fileURLToPath(
-        new URL(
-          "./src/server/test-utils/blaiseApiNodeClientMock.ts",
-          import.meta.url,
-        ),
-      ),
-    },
-  },
   test: {
     projects: [
       {
@@ -45,7 +34,6 @@ export default defineConfig({
         "src/**/*.types.ts",
         "src/**/__snapshots__/**",
         "src/**/setupTests.ts",
-        "src/server/test-utils/**",
       ],
     },
   },

@@ -1,27 +1,18 @@
 import react from "@vitejs/plugin-react";
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "");
-
-  return {
-    appType: "spa",
-    plugins: [react()],
-    define: {
-      "import.meta.env.VITE_URL_DOMAIN": JSON.stringify(
-        env.VITE_URL_DOMAIN ?? env.URL_DOMAIN ?? "",
-      ),
+export default defineConfig({
+  appType: "spa",
+  plugins: [react()],
+  build: {
+    outDir: "build",
+    assetsDir: "static",
+    sourcemap: true,
+  },
+  server: {
+    port: 3000,
+    proxy: {
+      "/api": { target: "http://localhost:5000", changeOrigin: true },
     },
-    build: {
-      outDir: "build",
-      assetsDir: "static",
-      sourcemap: true,
-    },
-    server: {
-      port: 3000,
-      proxy: {
-        "/api": { target: "http://localhost:5000", changeOrigin: true },
-      },
-    },
-  };
+  },
 });
