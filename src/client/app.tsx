@@ -206,44 +206,35 @@ function TrainingCasesTable({
 }): ReactElement {
   const message = getTrainingCasesTableMessage(trainingCases, errored);
 
-  return (
-    <div className="ons-u-mt-s">
-      {TrainingCaseTable(trainingCases, ["Case ID", "Action"], "", message)}
-    </div>
-  );
-}
-
-function TrainingCaseTable(
-  filteredTrainingCases: TrainingCase[],
-  tableColumns: string[],
-  tableCaption: string,
-  message: string,
-): ReactElement {
-  if (filteredTrainingCases.length === 0) {
+  if (trainingCases.length === 0) {
     return (
-      <Panel
-        spacious={true}
-        status={message.includes("Unable") ? "error" : "info"}
-      >
-        {message}
-      </Panel>
+      <div className="ons-u-mt-s">
+        <Panel
+          spacious={true}
+          status={message.includes("Unable") ? "error" : "info"}
+        >
+          {message}
+        </Panel>
+      </div>
     );
   }
 
   return (
-    <Table
-      id="training-cases-table"
-      columns={tableColumns}
-      tableCaption={tableCaption}
-      scrollableLabel="Training case list"
-    >
-      {filteredTrainingCases.map((trainingCase) => (
-        <TrainingCaseTableRow
-          key={trainingCase.caseId}
-          trainingCase={trainingCase}
-        />
-      ))}
-    </Table>
+    <div className="ons-u-mt-s">
+      <Table
+        id="training-cases-table"
+        columns={["Case ID", "Action"]}
+        tableCaption=""
+        scrollableLabel="Training case list"
+      >
+        {trainingCases.map((trainingCase) => (
+          <TrainingCaseTableRow
+            key={trainingCase.caseId}
+            trainingCase={trainingCase}
+          />
+        ))}
+      </Table>
+    </div>
   );
 }
 

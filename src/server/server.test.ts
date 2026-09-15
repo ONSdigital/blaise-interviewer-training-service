@@ -23,22 +23,7 @@ async function buildServerWithHealthRouter(healthRouter: express.Router) {
   vi.doMock("./handlers/healthCheckHandler", () => ({
     default: () => healthRouter,
   }));
-  vi.doMock("./handlers/questionnaireListHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/reportHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/monitoringHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/blaiseStatusHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/questionnaireInstallStatusHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/errorLogsHandler", () => ({
+  vi.doMock("./handlers/trainingCasesHandler", () => ({
     default: () => express.Router(),
   }));
 
@@ -70,22 +55,7 @@ async function buildServerWithHealthRouterAndMissingErrorPage(
   vi.doMock("./logger", () => ({
     default: { error: loggerErrorMock },
   }));
-  vi.doMock("./handlers/questionnaireListHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/reportHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/monitoringHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/blaiseStatusHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/questionnaireInstallStatusHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/errorLogsHandler", () => ({
+  vi.doMock("./handlers/trainingCasesHandler", () => ({
     default: () => express.Router(),
   }));
 
@@ -118,22 +88,7 @@ async function buildServerWithHealthRouterAndCustomErrorPage(
   vi.doMock("./logger", () => ({
     default: { error: loggerErrorMock },
   }));
-  vi.doMock("./handlers/questionnaireListHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/reportHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/monitoringHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/blaiseStatusHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/questionnaireInstallStatusHandler", () => ({
-    default: () => express.Router(),
-  }));
-  vi.doMock("./handlers/errorLogsHandler", () => ({
+  vi.doMock("./handlers/trainingCasesHandler", () => ({
     default: () => express.Router(),
   }));
 

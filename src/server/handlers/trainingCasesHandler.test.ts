@@ -109,6 +109,18 @@ describe("trainingCasesHandler", () => {
     });
   });
 
+  it("returns an internal server error when Blaise cannot list questionnaires", async () => {
+    const blaiseApiClient = buildBlaiseApiClientMock();
+    vi.mocked(blaiseApiClient.getQuestionnaires).mockRejectedValueOnce(
+      new Error("Blaise API unavailable"),
+    );
+    const app = buildApp(blaiseApiClient);
+
+    const response = await supertest(app).get("/api/questionnaires");
+
+    expect(response.statusCode).toEqual(500);
+  });
+
   it("returns only training cases with read-only Blaise launch links", async () => {
     const blaiseApiClient = buildBlaiseApiClientMock();
     const app = buildApp(blaiseApiClient);
@@ -128,6 +140,20 @@ describe("trainingCasesHandler", () => {
         },
       ],
     });
+  });
+
+  it("returns an internal server error when Blaise cannot retrieve training cases", async () => {
+    const blaiseApiClient = buildBlaiseApiClientMock();
+    vi.mocked(blaiseApiClient.getQuestionnaireCaseIds).mockRejectedValueOnce(
+      new Error("Blaise API unavailable"),
+    );
+    const app = buildApp(blaiseApiClient);
+
+    const response = await supertest(app).get(
+      "/api/questionnaires/LCF2304Z/training-cases",
+    );
+
+    expect(response.statusCode).toEqual(500);
   });
 
   it("matches report rows to case IDs independently of row order", async () => {
@@ -158,6 +184,24 @@ describe("trainingCasesHandler", () => {
       expect.objectContaining({ caseId: "1002" }),
     ]);
     expect(blaiseApiClient.getCase).not.toHaveBeenCalled();
+  });
+
+  it("returns an internal server error for malformed report data", async () => {
+    const blaiseApiClient = buildBlaiseApiClientMock();
+    vi.mocked(blaiseApiClient.getQuestionnaireReportData).mockResolvedValueOnce(
+      {
+        questionnaireName: "LCF2304Z",
+        questionnaireId: "00000000-0000-0000-0000-000000000000",
+        reportingData: null,
+      } as never,
+    );
+    const app = buildApp(blaiseApiClient);
+
+    const response = await supertest(app).get(
+      "/api/questionnaires/LCF2304Z/training-cases",
+    );
+
+    expect(response.statusCode).toEqual(500);
   });
 
   it("rejects invalid questionnaire names", async () => {
@@ -197,6 +241,26 @@ describe("trainingCasesHandler", () => {
     expect(blaiseApiClient.getQuestionnaireCaseIds).toHaveBeenCalledTimes(1);
     expect(blaiseApiClient.getQuestionnaireReportData).toHaveBeenCalledTimes(1);
     expect(blaiseApiClient.getCase).not.toHaveBeenCalled();
+  });
+
+  it("refreshes questionnaire and training-case responses after cache expiry", async () => {
+    vi.useFakeTimers();
+    try {
+      const blaiseApiClient = buildBlaiseApiClientMock();
+      const app = buildApp(blaiseApiClient, new NodeCache({ stdTTL: 1 }));
+
+      await supertest(app).get("/api/questionnaires/LCF2304Z/training-cases");
+      vi.advanceTimersByTime(1_001);
+      await supertest(app).get("/api/questionnaires/LCF2304Z/training-cases");
+
+      expect(blaiseApiClient.getQuestionnaires).toHaveBeenCalledTimes(2);
+      expect(blaiseApiClient.getQuestionnaireCaseIds).toHaveBeenCalledTimes(2);
+      expect(blaiseApiClient.getQuestionnaireReportData).toHaveBeenCalledTimes(
+        2,
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("looks up cases by ID when report data omits the serial number", async () => {
