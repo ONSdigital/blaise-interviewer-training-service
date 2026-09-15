@@ -1,3 +1,5 @@
+import { EventEmitter } from "node:events";
+
 describe("server bootstrap", () => {
   const originalEnv = { ...process.env };
 
@@ -9,7 +11,11 @@ describe("server bootstrap", () => {
   });
 
   it("boots server and starts listening", async () => {
-    const listenMock = vi.fn();
+    const listenMock = vi.fn(() => {
+      const server = new EventEmitter();
+      process.nextTick(() => server.emit("listening"));
+      return server;
+    });
     const newServerMock = vi.fn(() => ({ listen: listenMock }));
     const nodeCacheMock = vi.fn().mockImplementation(function MockNodeCache() {
       return {};
@@ -115,7 +121,13 @@ describe("server bootstrap", () => {
       }),
     }));
     vi.doMock("./server", () => ({
-      default: vi.fn(() => ({ listen: vi.fn() })),
+      default: vi.fn(() => ({
+        listen: vi.fn(() => {
+          const server = new EventEmitter();
+          process.nextTick(() => server.emit("listening"));
+          return server;
+        }),
+      })),
     }));
     vi.doMock("./logger", () => ({
       default: {
@@ -146,5 +158,57 @@ describe("server bootstrap", () => {
       { port: "7788" },
       "App is listening",
     );
+  });
+
+  it("logs and exits when the port cannot be bound", async () => {
+    const bindingError = new Error("EADDRINUSE");
+    const loggerErrorMock = vi.fn();
+
+    vi.doMock("./config", () => ({
+      getConfigFromEnv: () => ({
+        BlaiseApiUrl: "http://blaise-api.local",
+        ServerPark: "gusty",
+      }),
+    }));
+    vi.doMock("./server", () => ({
+      default: vi.fn(() => ({
+        listen: vi.fn(() => {
+          const server = new EventEmitter();
+          process.nextTick(() => server.emit("error", bindingError));
+          return server;
+        }),
+      })),
+    }));
+    vi.doMock("./logger", () => ({
+      default: {
+        info: vi.fn(),
+        error: loggerErrorMock,
+      },
+    }));
+    vi.doMock("node-cache", () => ({
+      default: vi.fn().mockImplementation(function MockNodeCache() {
+        return {};
+      }),
+    }));
+    vi.doMock("blaise-api-node-client", () => ({
+      BlaiseApiClient: class MockBlaiseApiClient {
+        constructor() {
+          // no-op
+        }
+      },
+    }));
+
+    const exitSpy = vi
+      .spyOn(process, "exit")
+      .mockImplementation((() => undefined) as never);
+
+    const { startApp } = await import("./index.js");
+    await startApp();
+
+    expect(loggerErrorMock).toHaveBeenCalledWith(
+      { error: bindingError },
+      "Failed to start app",
+    );
+    expect(exitSpy).toHaveBeenCalledWith(1);
   });
 });

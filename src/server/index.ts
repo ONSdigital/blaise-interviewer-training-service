@@ -23,7 +23,21 @@ async function bootstrap(): Promise<void> {
   const cache = new NodeCache({ stdTTL: cacheDuration });
   const app = newServer(blaiseApiClient, cache, config);
 
-  app.listen(port);
+  const server = app.listen(port);
+
+  await new Promise<void>((resolve, reject) => {
+    const handleListening = (): void => {
+      server.off("error", handleError);
+      resolve();
+    };
+    const handleError = (error: Error): void => {
+      server.off("listening", handleListening);
+      reject(error);
+    };
+
+    server.once("listening", handleListening);
+    server.once("error", handleError);
+  });
 
   logger.info({ port }, "App is listening");
 }
