@@ -46,7 +46,7 @@ Expected output includes `Listening on port [8080]`.
 
 ### Configure environment variables
 
-Create a `.env` file in the repository root (or `src/.env`) and set the following values:
+Create a `.env` file in the repository root and set the following values:
 
 ```ini
 BLAISE_API_URL=localhost:8080

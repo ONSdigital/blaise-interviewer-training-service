@@ -10,6 +10,7 @@ import trainingCasesHandler from "./handlers/trainingCasesHandler.js";
 import { Config } from "./config.js";
 import { BlaiseApiClient } from "blaise-api-node-client";
 import NodeCache from "node-cache";
+import logger from "./logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,12 +76,23 @@ function newServer(
   });
 
   server.use(function (
-    _err: Error,
-    _req: Request,
+    err: Error,
+    req: Request,
     res: Response,
     _next: NextFunction,
   ) {
     void _next;
+    logger.error(
+      {
+        err,
+        request: {
+          method: req.method,
+          originalUrl: req.originalUrl,
+          ip: req.ip,
+        },
+      },
+      "Unhandled request error",
+    );
     res.status(500).type("text/html").send(errorPageHtml);
   });
   return server;

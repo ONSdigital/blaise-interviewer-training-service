@@ -4,6 +4,8 @@ import NodeCache from "node-cache";
 import type { BlaiseApiClient } from "blaise-api-node-client";
 import type { Config } from "./config.js";
 
+const loggerErrorMock = vi.fn();
+
 const config: Config = {
   BlaiseApiUrl: "http://blaise-api.local",
   ServerPark: "gusty",
@@ -13,7 +15,11 @@ const config: Config = {
 
 async function buildServerWithHealthRouter(healthRouter: express.Router) {
   vi.resetModules();
+  loggerErrorMock.mockClear();
   vi.doUnmock("fs");
+  vi.doMock("./logger", () => ({
+    default: { error: loggerErrorMock },
+  }));
   vi.doMock("./handlers/healthCheckHandler", () => ({
     default: () => healthRouter,
   }));
@@ -49,6 +55,7 @@ async function buildServerWithHealthRouterAndMissingErrorPage(
   healthRouter: express.Router,
 ) {
   vi.resetModules();
+  loggerErrorMock.mockClear();
   vi.doMock("fs", () => ({
     default: {
       existsSync: () => false,
@@ -59,6 +66,9 @@ async function buildServerWithHealthRouterAndMissingErrorPage(
   }));
   vi.doMock("./handlers/healthCheckHandler", () => ({
     default: () => healthRouter,
+  }));
+  vi.doMock("./logger", () => ({
+    default: { error: loggerErrorMock },
   }));
   vi.doMock("./handlers/questionnaireListHandler", () => ({
     default: () => express.Router(),
@@ -93,6 +103,7 @@ async function buildServerWithHealthRouterAndCustomErrorPage(
   customHtml: string,
 ) {
   vi.resetModules();
+  loggerErrorMock.mockClear();
   vi.doMock("fs", () => ({
     default: {
       existsSync: () => true,
@@ -103,6 +114,9 @@ async function buildServerWithHealthRouterAndCustomErrorPage(
   }));
   vi.doMock("./handlers/healthCheckHandler", () => ({
     default: () => healthRouter,
+  }));
+  vi.doMock("./logger", () => ({
+    default: { error: loggerErrorMock },
   }));
   vi.doMock("./handlers/questionnaireListHandler", () => ({
     default: () => express.Router(),
@@ -148,8 +162,9 @@ describe("newServer", () => {
 
   it("renders 500 page when middleware passes an error", async () => {
     const healthRouter = express.Router();
+    const error = new Error("boom");
     healthRouter.get("/api/health", (_req, _res, next) => {
-      next(new Error("boom"));
+      next(error);
     });
 
     const app = await buildServerWithHealthRouter(healthRouter);
@@ -157,6 +172,17 @@ describe("newServer", () => {
     const response = await supertest(app).get("/api/health");
 
     expect(response.statusCode).toEqual(500);
+    expect(response.text).not.toContain("boom");
+    expect(loggerErrorMock).toHaveBeenCalledWith(
+      {
+        err: error,
+        request: expect.objectContaining({
+          method: "GET",
+          originalUrl: "/api/health",
+        }),
+      },
+      "Unhandled request error",
+    );
   });
 
   it("uses fallback error page text when 500.html is missing", async () => {
