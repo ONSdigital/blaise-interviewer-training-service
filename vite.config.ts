@@ -8,9 +8,6 @@ export default defineConfig(({ mode }) => {
     appType: "spa",
     plugins: [react()],
     define: {
-      "import.meta.env.VITE_PROJECT_ID": JSON.stringify(
-        env.VITE_PROJECT_ID ?? env.PROJECT_ID ?? "",
-      ),
       "import.meta.env.VITE_URL_DOMAIN": JSON.stringify(
         env.VITE_URL_DOMAIN ?? env.URL_DOMAIN ?? "",
       ),
@@ -24,8 +21,6 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       proxy: {
         "/api": { target: "http://localhost:5000", changeOrigin: true },
-        "/upload": { target: "http://localhost:5000", changeOrigin: true },
-        "/bucket": { target: "http://localhost:5000", changeOrigin: true },
       },
     },
   };

@@ -51,7 +51,6 @@ Create a `.env` file in the repository root and set the following values:
 ```ini
 BLAISE_API_URL=localhost:8080
 SERVER_PARK=gusty
-PROJECT_ID=ons-blaise-v2-dev-sandbox123
 SURVEYS_TO_SHOW=LCF
 VM_EXTERNAL_WEB_URL=https://example-blaise-web-url
 ```
@@ -62,7 +61,6 @@ Variable reference:
 | --------------------- | -------------------------------------------------------------- |
 | `BLAISE_API_URL`      | Blaise REST API host used by the service server                |
 | `SERVER_PARK`         | Blaise server park name                                        |
-| `PROJECT_ID`          | GCP project for Monitoring checks                              |
 | `SURVEYS_TO_SHOW`     | Comma-separated survey TLAs to show, for example `LCF`         |
 | `VM_EXTERNAL_WEB_URL` | Blaise external web URL used to build read-only training links |
 
