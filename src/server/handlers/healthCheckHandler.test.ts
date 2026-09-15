@@ -5,9 +5,6 @@ import { BlaiseApiClient } from "blaise-api-node-client";
 import { getConfigFromEnv } from "../config.js";
 import NodeCache from "node-cache";
 
-process.env.SURVEYS_TO_SHOW = "LCF";
-process.env.VM_EXTERNAL_WEB_URL = "https://blaise-web.local";
-
 const config = getConfigFromEnv();
 const cache = new NodeCache({ stdTTL: 60 });
 
