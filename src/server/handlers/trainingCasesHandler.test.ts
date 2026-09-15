@@ -72,7 +72,7 @@ function buildBlaiseApiClientMockWithoutSerialNumber() {
         serverParkName: "gusty",
       },
     ]),
-    getQuestionnaireCaseIds: vi.fn().mockResolvedValue(["1002"]),
+    getQuestionnaireCaseIds: vi.fn().mockResolvedValue(["1002", "1001"]),
     getQuestionnaireReportData: vi.fn().mockResolvedValue({
       questionnaireName: "LCF2304Z",
       questionnaireId: "00000000-0000-0000-0000-000000000000",
@@ -82,7 +82,17 @@ function buildBlaiseApiClientMockWithoutSerialNumber() {
         },
       ],
     }),
-    getCase: vi.fn(),
+    getCase: vi
+      .fn()
+      .mockImplementation(
+        (_serverPark: string, _questionnaireName: string, caseId: string) =>
+          Promise.resolve({
+            caseId,
+            fieldData: {
+              "qDataBag.TrainingCase": caseId === "1002" ? "1" : "0",
+            },
+          }),
+      ),
   } as unknown as BlaiseApiClient;
 }
 
@@ -118,6 +128,36 @@ describe("trainingCasesHandler", () => {
         },
       ],
     });
+  });
+
+  it("matches report rows to case IDs independently of row order", async () => {
+    const blaiseApiClient = buildBlaiseApiClientMock();
+    vi.mocked(blaiseApiClient.getQuestionnaireReportData).mockResolvedValueOnce(
+      {
+        questionnaireName: "LCF2304Z",
+        questionnaireId: "00000000-0000-0000-0000-000000000000",
+        reportingData: [
+          {
+            "qiD.Serial_Number": "1001",
+            "qDataBag.TrainingCase": "0",
+          },
+          {
+            "qiD.Serial_Number": "1002",
+            "qDataBag.TrainingCase": "1",
+          },
+        ],
+      },
+    );
+    const app = buildApp(blaiseApiClient);
+
+    const response = await supertest(app).get(
+      "/api/questionnaires/LCF2304Z/training-cases",
+    );
+
+    expect(response.body.trainingCases).toStrictEqual([
+      expect.objectContaining({ caseId: "1002" }),
+    ]);
+    expect(blaiseApiClient.getCase).not.toHaveBeenCalled();
   });
 
   it("rejects invalid questionnaire names", async () => {
@@ -159,7 +199,7 @@ describe("trainingCasesHandler", () => {
     expect(blaiseApiClient.getCase).not.toHaveBeenCalled();
   });
 
-  it("falls back to questionnaire case IDs when report data omits the serial number", async () => {
+  it("looks up cases by ID when report data omits the serial number", async () => {
     const blaiseApiClient = buildBlaiseApiClientMockWithoutSerialNumber();
     const app = buildApp(blaiseApiClient);
 
@@ -175,5 +215,6 @@ describe("trainingCasesHandler", () => {
           "https://blaise-web.local/LCF2304Z?KeyValue=1002&DataEntrySettings=ReadOnly",
       },
     ]);
+    expect(blaiseApiClient.getCase).toHaveBeenCalledTimes(2);
   });
 });

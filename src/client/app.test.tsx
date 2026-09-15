@@ -122,6 +122,50 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("orders questionnaires by name", async () => {
+    stubFetch([
+      {
+        questionnaires: [
+          { name: "LCF2305Z" },
+          { name: "LCF2304Z" },
+          { name: "APS2301A" },
+        ],
+      },
+    ]);
+
+    render(<App />);
+
+    const options = await screen.findAllByRole("option");
+    expect(options.map((option) => option.getAttribute("value"))).toStrictEqual(
+      ["", "APS2301A", "LCF2304Z", "LCF2305Z"],
+    );
+  });
+
+  it("orders training cases by case ID", async () => {
+    stubFetch([
+      { questionnaires: [{ name: "LCF2304Z" }] },
+      {
+        questionnaireName: "LCF2304Z",
+        trainingCases: [
+          { caseId: "1002", launchUrl: "https://example.com/1002" },
+          { caseId: "1001", launchUrl: "https://example.com/1001" },
+        ],
+      },
+    ]);
+
+    render(<App />);
+    await userEvent.selectOptions(
+      await screen.findByLabelText("Questionnaire"),
+      "LCF2304Z",
+    );
+
+    const rows = await screen.findAllByTestId("training-case-table-row");
+    expect(rows.map((row) => row.cells[0]?.textContent)).toStrictEqual([
+      "1001",
+      "1002",
+    ]);
+  });
+
   it("shows an error when questionnaires cannot be loaded", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce({ ok: false }));
 

@@ -131,11 +131,30 @@ async function getTrainingCases(
       [trainingCaseField, caseIdField],
     ),
   ]);
-  const trainingCases = reportData.reportingData
-    .map((reportRow, index) => ({
-      caseId: readStringField(reportRow, caseIdField) ?? caseIds[index],
-      trainingCaseValue: readField(reportRow, trainingCaseField),
-    }))
+  const reportRows = reportData.reportingData.map((reportRow) => ({
+    caseId: readStringField(reportRow, caseIdField),
+    trainingCaseValue: readField(reportRow, trainingCaseField),
+  }));
+  const caseRows = reportRows.every(({ caseId }) => caseId !== undefined)
+    ? reportRows
+    : await Promise.all(
+        caseIds.map(async (caseId) => {
+          const questionnaireCase = await blaiseApiClient.getCase(
+            config.ServerPark,
+            questionnaireName,
+            caseId,
+          );
+
+          return {
+            caseId,
+            trainingCaseValue: readField(
+              questionnaireCase.fieldData,
+              trainingCaseField,
+            ),
+          };
+        }),
+      );
+  const trainingCases = caseRows
     .filter(
       (
         reportRow,

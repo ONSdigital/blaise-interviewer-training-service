@@ -39,7 +39,11 @@ export default function App(): ReactElement {
         const availableQuestionnaires = await getAvailableQuestionnaires();
 
         if (!ignore) {
-          setQuestionnaires(availableQuestionnaires);
+          setQuestionnaires(
+            availableQuestionnaires.toSorted((left, right) =>
+              left.name.localeCompare(right.name),
+            ),
+          );
         }
       } catch {
         if (!ignore) {
@@ -75,7 +79,11 @@ export default function App(): ReactElement {
         );
 
         if (!ignore) {
-          setTrainingCases(availableTrainingCases);
+          setTrainingCases(
+            availableTrainingCases.toSorted((left, right) =>
+              left.caseId.localeCompare(right.caseId),
+            ),
+          );
         }
       } catch {
         if (!ignore) {
