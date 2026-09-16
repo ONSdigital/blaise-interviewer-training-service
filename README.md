@@ -8,6 +8,15 @@ The app is a React frontend served by an Express backend and deployed to Google 
 
 This service lists configured survey questionnaires deployed in Blaise and shows the cases marked as interviewer training cases. Training cases are identified by `qDataBag.TrainingCase` being set to `1`, and launch into Blaise in read-only data entry mode.
 
+### Questionnaire requirements
+
+Each questionnaire shown by this service must include the following configuration:
+
+- `qDataBag.TrainingCase` must be set to `1` for cases that should be available as interviewer training cases.
+- A `Data Entry Settings` setting specifically named `ReadOnly`, configured with the `Accept input, don't save` option and with `Apply Record Locking` unchecked.
+
+Interviewers use training cases to familiarise themselves with a questionnaire and test data entries without saving changes to the database. The `ReadOnly` setting is useful for observing questionnaire behaviour and understanding the consequences of potential modifications. With `Apply Record Locking` unchecked, multiple interviewers can open the same case at the same time without affecting one another, because their changes are not saved. The service activates this mode by appending `DataEntrySettings=ReadOnly` to the Blaise URL for a training case.
+
 ## Local Development
 
 ### Prerequisites
