@@ -248,7 +248,7 @@ function TrainingCaseTableRow({
       <td className="ons-table__cell" style={{ width: "35%" }}>
         {trainingCase.caseId}
       </td>
-      <td className="ons-table__cell" style={{ width: "35" }}>
+      <td className="ons-table__cell" style={{ width: "35%" }}>
         {trainingCase.country}
       </td>
       <td className="ons-table__cell">
