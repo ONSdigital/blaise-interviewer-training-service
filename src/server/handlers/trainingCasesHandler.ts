@@ -10,12 +10,20 @@ type QuestionnaireSummary = {
 
 type TrainingCase = {
   caseId: string;
+  country: string;
   launchUrl: string;
 };
 
 const questionnaireNamePattern = /^[A-Za-z0-9_]+$/;
 const trainingCaseField = "qDataBag.TrainingCase";
+const countryCodeField = "qDataBag.CountryCode";
 const caseIdField = "qiD.Serial_Number";
+const countryNamesByCode: Readonly<Record<string, string>> = {
+  E: "England",
+  W: "Wales",
+  S: "Scotland",
+  N: "NI",
+};
 
 export default function trainingCasesHandler(
   blaiseApiClient: BlaiseApiClient,
@@ -128,11 +136,12 @@ async function getTrainingCases(
     blaiseApiClient.getQuestionnaireReportData(
       config.ServerPark,
       questionnaireName,
-      [trainingCaseField, caseIdField],
+      [trainingCaseField, countryCodeField, caseIdField],
     ),
   ]);
   const reportRows = reportData.reportingData.map((reportRow) => ({
     caseId: readStringField(reportRow, caseIdField),
+    country: readCountryCodeField(reportRow),
     trainingCaseValue: readField(reportRow, trainingCaseField),
   }));
   const caseRows = reportRows.every(({ caseId }) => caseId !== undefined)
@@ -147,6 +156,7 @@ async function getTrainingCases(
 
           return {
             caseId,
+            country: readCountryCodeField(questionnaireCase.fieldData),
             trainingCaseValue: readField(
               questionnaireCase.fieldData,
               trainingCaseField,
@@ -158,12 +168,17 @@ async function getTrainingCases(
     .filter(
       (
         reportRow,
-      ): reportRow is { caseId: string; trainingCaseValue: JSONValue } =>
+      ): reportRow is {
+        caseId: string;
+        country: string;
+        trainingCaseValue: JSONValue;
+      } =>
         reportRow.caseId !== undefined &&
         isTrainingCaseValue(reportRow.trainingCaseValue),
     )
     .map((trainingCase) => ({
       caseId: trainingCase.caseId,
+      country: trainingCase.country,
       launchUrl: buildLaunchUrl(
         config.VmExternalWebUrl,
         questionnaireName,
@@ -201,7 +216,35 @@ function readStringField(
     return value.toString();
   }
 
+  if (isJsonObject(value)) {
+    for (const propertyName of ["label", "name", "displayValue", "value"]) {
+      const propertyValue = value[propertyName];
+
+      if (typeof propertyValue === "string") {
+        return propertyValue;
+      }
+
+      if (typeof propertyValue === "number") {
+        return propertyValue.toString();
+      }
+    }
+  }
+
   return undefined;
+}
+
+function readCountryCodeField(
+  record: Readonly<Record<string, JSONValue>>,
+): string {
+  const countryCode = readStringField(record, countryCodeField)?.toUpperCase();
+
+  return countryNamesByCode[countryCode ?? ""] ?? "";
+}
+
+function isJsonObject(
+  value: JSONValue | undefined,
+): value is Readonly<Record<string, JSONValue>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isTrainingCaseValue(
