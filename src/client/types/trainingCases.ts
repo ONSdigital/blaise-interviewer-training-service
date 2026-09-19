@@ -4,6 +4,7 @@ export type QuestionnaireSummary = {
 
 export type TrainingCase = {
   caseId: string;
+  country: string;
   launchUrl: string;
 };
 

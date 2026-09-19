@@ -48,6 +48,7 @@ function buildBlaiseApiClientMock() {
         {
           "qiD.Serial_Number": "1002",
           "qDataBag.TrainingCase": 1,
+          "qDataBag.CountryCode": "E",
         },
         {
           "qiD.Serial_Number": "1001",
@@ -90,6 +91,7 @@ function buildBlaiseApiClientMockWithoutSerialNumber() {
             caseId,
             fieldData: {
               "qDataBag.TrainingCase": caseId === "1002" ? "1" : "0",
+              "qDataBag.CountryCode": "N",
             },
           }),
       ),
@@ -135,11 +137,38 @@ describe("trainingCasesHandler", () => {
       trainingCases: [
         {
           caseId: "1002",
+          country: "England",
           launchUrl:
             "https://blaise-web.local/LCF2304Z?KeyValue=1002&DataEntrySettings=ReadOnly",
         },
       ],
     });
+  });
+
+  it("maps a CountryCode field to the Country label", async () => {
+    const blaiseApiClient = buildBlaiseApiClientMock();
+    vi.mocked(blaiseApiClient.getQuestionnaireReportData).mockResolvedValueOnce(
+      {
+        questionnaireName: "LCF2304Z",
+        questionnaireId: "00000000-0000-0000-0000-000000000000",
+        reportingData: [
+          {
+            "qiD.Serial_Number": "9001",
+            "QDataBag.CountryCode": "E",
+            "QDataBag.TrainingCase": "1",
+          },
+        ],
+      },
+    );
+    const app = buildApp(blaiseApiClient);
+
+    const response = await supertest(app).get(
+      "/api/questionnaires/LCF2304Z/training-cases",
+    );
+
+    expect(response.body.trainingCases).toStrictEqual([
+      expect.objectContaining({ caseId: "9001", country: "England" }),
+    ]);
   });
 
   it("returns an internal server error when Blaise cannot retrieve training cases", async () => {
@@ -275,6 +304,7 @@ describe("trainingCasesHandler", () => {
     expect(response.body.trainingCases).toStrictEqual([
       {
         caseId: "1002",
+        country: "NI",
         launchUrl:
           "https://blaise-web.local/LCF2304Z?KeyValue=1002&DataEntrySettings=ReadOnly",
       },

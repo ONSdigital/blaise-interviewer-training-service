@@ -223,7 +223,7 @@ function TrainingCasesTable({
     <div className="ons-u-mt-s">
       <Table
         id="training-cases-table"
-        columns={["Case ID", "Action"]}
+        columns={["Case ID", "Country", "Action"]}
         tableCaption=""
         scrollableLabel="Training case list"
       >
@@ -245,8 +245,11 @@ function TrainingCaseTableRow({
 }): ReactElement {
   return (
     <tr className="ons-table__row" data-testid="training-case-table-row">
-      <td className="ons-table__cell" style={{ width: "50%" }}>
+      <td className="ons-table__cell" style={{ width: "35%" }}>
         {trainingCase.caseId}
+      </td>
+      <td className="ons-table__cell" style={{ width: "35%" }}>
+        {trainingCase.country}
       </td>
       <td className="ons-table__cell">
         <ExternalLink
